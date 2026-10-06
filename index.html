@@ -138,31 +138,51 @@
 
 <script>
 
+    const SUPABASE_URL =
+        "https://jghskmotttmgyieculia.supabase.co";
+
+    const SUPABASE_KEY =
+        "sb_publishable_cBk56ezlh6xOGHXZzdnXHA_xfzmyCHB";
+
     let players = [];
 
     function addPlayer() {
 
-        const input = document.getElementById("playerName");
+    const input = document.getElementById("playerName");
+    const name = input.value.trim();
 
-        const name = input.value.trim();
-
-        if (name === "") {
-            alert("请输入参加者名字");
-            return;
-        }
-
-        players.push({
-            name: name,
-            scores: []
-        });
-
-        input.value = "";
-
-        displayPlayers();
-
-        showRanking("total");
+    if (name === "") {
+        alert("请输入参加者名字");
+        return;
     }
 
+    players.push({
+        name: name,
+        scores: []
+    });
+
+    input.value = "";
+
+    displayPlayers();
+    showRanking("total");
+}
+
+    async function loadPlayers() {
+
+    const response = await fetch(
+        SUPABASE_URL + "/rest/v1/scores?select=*",
+        {
+            headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization": "Bearer " + SUPABASE_KEY
+            }
+        }
+    );
+
+    const data = await response.json();
+
+    console.log(data);
+}
 
     function addScore(index) {
 
@@ -320,6 +340,8 @@
         });
 
     }
+
+    loadPlayers();
 
 </script>
 
