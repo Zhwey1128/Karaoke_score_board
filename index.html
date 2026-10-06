@@ -139,13 +139,14 @@ input:focus {
     line-height: 1.5;
 }
 
-        .tabs {
+.tabs {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 15px;
     background: #f1f1f1;
     padding: 5px;
     border-radius: 12px;
+    flex-wrap: wrap;
 }
 
 .tabs button {
@@ -337,6 +338,7 @@ input:focus {
         <div class="tabs">
     <button id="totalTab" onclick="showRanking('total')">总分</button>
     <button id="averageTab" onclick="showRanking('average')">平均分</button>
+    <button id="songTab" onclick="showRanking('song')">🎵 单曲排名</button>
 </div>
 
 <div class="participant-count" id="participantCount"></div>
@@ -724,13 +726,65 @@ document.getElementById("participantCount").innerHTML =
 
     document.getElementById("totalTab").classList.remove("active");
     document.getElementById("averageTab").classList.remove("active");
+    document.getElementById("songTab").classList.remove("active");
 
     if (type === "total") {
-        document.getElementById("totalTab").classList.add("active");
-    } else {
-        document.getElementById("averageTab").classList.add("active");
-    }
+    document.getElementById("totalTab").classList.add("active");
+} else if (type === "average") {
+    document.getElementById("averageTab").classList.add("active");
+} else {
+    document.getElementById("songTab").classList.add("active");
+}
 
+if (type === "song") {
+    const songs = [];
+
+    players.forEach(player => {
+        player.scores.forEach(item => {
+            songs.push({
+                playerName: player.name,
+                songName: item.song_name || "未命名歌曲",
+                score: Number(item.score)
+            });
+        });
+    });
+
+    songs.sort((a, b) => b.score - a.score);
+
+    rankingContainer.innerHTML = "";
+
+    songs.forEach((song, index) => {
+        const number =
+            index === 0 ? "🥇" :
+            index === 1 ? "🥈" :
+            index === 2 ? "🥉" :
+            `${index + 1}.`;
+
+        const scoreClass =
+            song.score >= 90 ? "score-high" :
+            song.score >= 80 ? "score-medium" :
+            "score-low";
+
+        rankingContainer.innerHTML += `
+            <div class="ranking rank-${index + 1}">
+                <strong>
+                    ${number} ${song.playerName}
+                </strong>
+
+                <div class="ranking-details">
+                    🎵 ${song.songName}
+                </div>
+
+                <strong class="ranking-value ${scoreClass}">
+                    ${song.score.toFixed(2)}
+                </strong>
+            </div>
+        `;
+    });
+
+    return;
+}
+        
     let ranking = players.map(player => {
 
         const total = player.scores.reduce(
