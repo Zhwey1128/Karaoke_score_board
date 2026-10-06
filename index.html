@@ -265,6 +265,42 @@
     await loadPlayers();
 }
 
+    async function deleteScore(id) {
+
+    const confirmDelete = confirm(
+        "确定要删除这首歌的分数吗？"
+    );
+
+    if (!confirmDelete) {
+        return;
+    }
+
+    const response = await fetch(
+        SUPABASE_URL + "/rest/v1/scores?id=eq." + id,
+        {
+            method: "DELETE",
+
+            headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization": "Bearer " + SUPABASE_KEY
+            }
+        }
+    );
+
+    if (!response.ok) {
+
+        const error = await response.text();
+
+        console.log(error);
+
+        alert("删除失败");
+
+        return;
+    }
+
+    await loadPlayers();
+}
+
 
     function displayPlayers() {
 
