@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karaoke Score Board</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-top: 25px;
+        }
+
+        input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #555;
+        }
+
+        .player {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin-top: 8px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+
+        .score {
+            margin-top: 8px;
+            padding: 8px;
+            background: #fafafa;
+            border-left: 3px solid #333;
+        }
+
+        .ranking {
+            padding: 12px;
+            margin-top: 8px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tabs button {
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🎤 Karaoke Score Board</h1>
+    <div class="subtitle">唱K大赛评分系统</div>
+
+    <div class="section">
+        <h2>👤 参加者</h2>
+
+        <input 
+            type="text" 
+            id="playerName" 
+            placeholder="输入参加者名字"
+        >
+
+        <button onclick="addPlayer()">＋ 添加参加者</button>
+
+        <div id="players"></div>
+    </div>
+
+    <div class="section">
+        <h2>🏆 排名</h2>
+
+        <div class="tabs">
+            <button onclick="showRanking('total')">
+                总分
+            </button>
+
+            <button onclick="showRanking('average')">
+                平均分
+            </button>
+        </div>
+
+        <div id="ranking"></div>
+    </div>
+
+</div>
+
+<script>
+
+    let players = [];
+
+    function addPlayer() {
+
+        const input = document.getElementById("playerName");
+
+        const name = input.value.trim();
+
+        if (name === "") {
+            alert("请输入参加者名字");
+            return;
+        }
+
+        players.push({
+            name: name,
+            scores: []
+        });
+
+        input.value = "";
+
+        displayPlayers();
+
+        showRanking("total");
+    }
+
+
+    function addScore(index) {
+
+        const scoreInput = document.getElementById(
+            "score-" + index
+        );
+
+        const score = parseFloat(scoreInput.value);
+
+        if (isNaN(score)) {
+            alert("请输入正确的分数");
+            return;
+        }
+
+        players[index].scores.push(score);
+
+        scoreInput.value = "";
+
+        displayPlayers();
+
+        showRanking("total");
+    }
+
+
+    function displayPlayers() {
+
+        const container = document.getElementById("players");
+
+        container.innerHTML = "";
+
+        players.forEach((player, index) => {
+
+            let scoresHTML = "";
+
+            player.scores.forEach((score, scoreIndex) => {
+
+                scoresHTML += `
+                    <div class="score">
+                        第 ${scoreIndex + 1} 首：${score.toFixed(2)}
+                    </div>
+                `;
+
+            });
+
+
+            container.innerHTML += `
+
+                <div class="player">
+
+                    <div style="width:100%">
+
+                        <strong>${player.name}</strong>
+
+                        ${scoresHTML}
+
+                        <br>
+
+                        <input
+                            type="number"
+                            id="score-${index}"
+                            placeholder="输入分数，例如 95.50"
+                            step="0.01"
+                        >
+
+                        <button onclick="addScore(${index})">
+                            ＋ 添加分数
+                        </button>
+
+                    </div>
+
+                </div>
+
+            `;
+
+        });
+
+    }
+
+
+    function showRanking(type) {
+
+        const rankingContainer =
+            document.getElementById("ranking");
+
+        let ranking = players.map(player => {
+
+            const total =
+                player.scores.reduce(
+                    (sum, score) => sum + score,
+                    0
+                );
+
+            const average =
+                player.scores.length > 0
+                ? total / player.scores.length
+                : 0;
+
+            return {
+                name: player.name,
+                total: total,
+                average: average
+            };
+
+        });
+
+
+        if (type === "total") {
+
+            ranking.sort(
+                (a, b) => b.total - a.total
+            );
+
+        } else {
+
+            ranking.sort(
+                (a, b) => b.average - a.average
+            );
+
+        }
+
+
+        rankingContainer.innerHTML = "";
+
+        ranking.forEach((player, index) => {
+
+            const number =
+                index === 0 ? "🥇" :
+                index === 1 ? "🥈" :
+                index === 2 ? "🥉" :
+                `${index + 1}.`;
+
+            const value =
+                type === "total"
+                ? player.total.toFixed(2)
+                : player.average.toFixed(2);
+
+
+            rankingContainer.innerHTML += `
+
+                <div class="ranking">
+
+                    <strong>
+                        ${number} ${player.name}
+                    </strong>
+
+                    <br>
+
+                    ${type === "total" ? "总分" : "平均分"}：
+                    ${value}
+
+                </div>
+
+            `;
+
+        });
+
+    }
+
+</script>
+
+</body>
+</html>
