@@ -161,6 +161,19 @@ input:focus {
     transform: none;
 }
 
+.add-player-btn {
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    padding: 13px;
+}
+
+.add-score-btn {
+    width: 100%;
+    margin-top: 5px;
+    padding: 12px;
+}
+
 @media (max-width: 600px) {
     body {
         padding: 10px;
@@ -198,7 +211,9 @@ input:focus {
             placeholder="输入参加者名字"
         >
 
-        <button onclick="addPlayer()">＋ 添加参加者</button>
+        <button class="add-player-btn" onclick="addPlayer()">
+    ＋ 添加参加者
+</button>
 
         <div id="players"></div>
     </div>
@@ -516,9 +531,9 @@ input:focus {
                         step="0.01"
                     >
 
-                    <button onclick="addScore(${index})">
-                        ＋ 添加分数
-                    </button>
+                    <button class="add-score-btn" onclick="addScore(${index})">
+    ＋ 添加分数
+</button>
 
                 </div>
 
