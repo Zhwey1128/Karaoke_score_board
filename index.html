@@ -260,57 +260,55 @@
 
     function displayPlayers() {
 
-        const container = document.getElementById("players");
+    const container = document.getElementById("players");
 
-        container.innerHTML = "";
+    container.innerHTML = "";
 
-        players.forEach((player, index) => {
+    players.forEach((player, index) => {
 
-            let scoresHTML = "";
+        let scoresHTML = "";
 
-            player.scores.forEach((score, scoreIndex) => {
+        player.scores.forEach((item, scoreIndex) => {
 
-                scoresHTML += `
-                    <div class="score">
-                        第 ${scoreIndex + 1} 首：${score.toFixed(2)}
-                    </div>
-                `;
-
-            });
-
-
-            container.innerHTML += `
-
-                <div class="player">
-
-                    <div style="width:100%">
-
-                        <strong>${player.name}</strong>
-
-                        ${scoresHTML}
-
-                        <br>
-
-                        <input
-                            type="number"
-                            id="score-${index}"
-                            placeholder="输入分数，例如 95.50"
-                            step="0.01"
-                        >
-
-                        <button onclick="addScore(${index})">
-                            ＋ 添加分数
-                        </button>
-
-                    </div>
-
+            scoresHTML += `
+                <div class="score">
+                    第 ${scoreIndex + 1} 首：
+                    ${item.song_name || "未命名歌曲"}
+                    — ${Number(item.score).toFixed(2)}
                 </div>
-
             `;
 
         });
 
-    }
+        container.innerHTML += `
+            <div class="player">
+
+                <div style="width:100%">
+
+                    <strong>${player.name}</strong>
+
+                    ${scoresHTML}
+
+                    <br>
+
+                    <input
+                        type="number"
+                        id="score-${index}"
+                        placeholder="输入分数，例如 95.50"
+                        step="0.01"
+                    >
+
+                    <button onclick="addScore(${index})">
+                        ＋ 添加分数
+                    </button>
+
+                </div>
+
+            </div>
+        `;
+
+    });
+}
 
 
     function showRanking(type) {
