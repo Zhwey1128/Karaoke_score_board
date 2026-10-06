@@ -562,7 +562,8 @@ input:focus {
         return {
             name: player.name,
             total: total,
-            average: average
+            average: average,
+            songCount: player.scores.length
         };
 
     });
@@ -600,7 +601,7 @@ input:focus {
     <br>
     ${type === "total" ? "总分" : "平均分"}：${value}
     <br>
-    🎵 歌曲数：${player.scores.length}
+    🎵 歌曲数：${player.songCount}
 </div>
         `;
 
