@@ -272,6 +272,13 @@ input:focus {
     font-weight: 700;
 }
 
+.participant-count {
+    text-align: center;
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
 @media (max-width: 600px) {
     body {
         padding: 10px;
@@ -325,7 +332,9 @@ input:focus {
     <button id="averageTab" onclick="showRanking('average')">平均分</button>
 </div>
 
-        <div id="ranking"></div>
+<div class="participant-count" id="participantCount"></div>
+
+<div id="ranking"></div>
     </div>
 
 </div>
@@ -688,6 +697,9 @@ scoresHTML += `
     function showRanking(type) {
     const rankingContainer = document.getElementById("ranking");
 
+    document.getElementById("participantCount").textContent =
+        `👥 参赛人数：${players.length} 人`;
+
     document.getElementById("totalTab").classList.remove("active");
     document.getElementById("averageTab").classList.remove("active");
 
@@ -740,10 +752,17 @@ scoresHTML += `
             index === 2 ? "🥉" :
             `${index + 1}.`;
 
-        const value =
-            type === "total"
-                ? player.total.toFixed(2)
-                : player.average.toFixed(2);
+        const rankingScore =
+    type === "total"
+        ? player.total
+        : player.average;
+
+const rankingClass =
+    rankingScore >= 90 ? "score-high" :
+    rankingScore >= 80 ? "score-medium" :
+    "score-low";
+
+const value = rankingScore.toFixed(2);
 
         rankingContainer.innerHTML += `
             <div class="ranking rank-${index + 1}">
@@ -752,7 +771,7 @@ scoresHTML += `
     </strong>
     <br>
     ${type === "total" ? "总分" : "平均分"}：
-<strong class="ranking-value">${value}</strong>
+<strong class="ranking-value ${rankingClass}">${value}</strong>
     <div class="ranking-details">
     🎵 歌曲数：${player.songCount}
     <br>
