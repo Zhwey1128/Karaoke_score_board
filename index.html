@@ -32,7 +32,7 @@
         .subtitle {
     text-align: center;
     color: #666;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
     font-size: 16px;
     font-weight: 500;
 }
@@ -136,6 +136,7 @@ input:focus {
     border-radius: 12px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.08);
     border: 1px solid #eee;
+    line-height: 1.5;
 }
 
         .tabs {
@@ -161,6 +162,12 @@ input:focus {
     transform: none;
 }
 
+.tabs button.active {
+    background: white;
+    color: #667eea;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
 .add-player-btn {
     width: 100%;
     margin-top: 5px;
@@ -176,6 +183,8 @@ input:focus {
 
 .rank-1 {
     border: 2px solid #f1c40f;
+    box-shadow: 0 5px 15px rgba(241, 196, 15, 0.2);
+    transform: scale(1.02);
 }
 
 .rank-2 {
@@ -184,6 +193,49 @@ input:focus {
 
 .rank-3 {
     border: 2px solid #cd7f32;
+}
+
+.player-name {
+    display: inline-block;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    background: #f0f2ff;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+.score-number {
+    font-size: 16px;
+    color: #667eea;
+}
+
+.ranking-value {
+    font-size: 20px;
+    color: #667eea;
+}
+
+.ranking-details {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #777;
+    line-height: 1.6;
+}
+
+.rank-1 strong,
+.rank-2 strong,
+.rank-3 strong {
+    font-size: 19px;
+}
+
+.no-score {
+    margin-top: 10px;
+    padding: 10px;
+    color: #999;
+    font-size: 14px;
+    text-align: center;
+    background: #fafafa;
+    border-radius: 8px;
 }
 
 @media (max-width: 600px) {
@@ -221,6 +273,7 @@ input:focus {
             type="text" 
             id="playerName" 
             placeholder="输入参加者名字"
+            onkeydown="if(event.key === 'Enter') addPlayer()"
         >
 
         <button class="add-player-btn" onclick="addPlayer()">
@@ -234,14 +287,9 @@ input:focus {
         <h2>🏆 排名</h2>
 
         <div class="tabs">
-            <button onclick="showRanking('total')">
-                总分
-            </button>
-
-            <button onclick="showRanking('average')">
-                平均分
-            </button>
-        </div>
+    <button id="totalTab" onclick="showRanking('total')">总分</button>
+    <button id="averageTab" onclick="showRanking('average')">平均分</button>
+</div>
 
         <div id="ranking"></div>
     </div>
@@ -267,6 +315,15 @@ input:focus {
         alert("请输入参加者名字");
         return;
     }
+
+    const exists = players.some(
+    player => player.name.toLowerCase() === name.toLowerCase()
+);
+
+if (exists) {
+    alert("这个参加者已经存在");
+    return;
+}
 
     players.push({
         name: name,
@@ -345,6 +402,10 @@ input:focus {
         alert("请输入正确的分数");
         return;
     }
+    if (score < 0 || score > 100) {
+    alert("分数必须在 0 到 100 之间");
+    return;
+}
 
     const response = await fetch(
         SUPABASE_URL + "/rest/v1/scores",
@@ -449,6 +510,11 @@ input:focus {
         return;
     }
 
+    if (score < 0 || score > 100) {
+    alert("分数必须在 0 到 100 之间");
+    return;
+}
+
     const response = await fetch(
         SUPABASE_URL + "/rest/v1/scores?id=eq." + id,
         {
@@ -493,13 +559,21 @@ input:focus {
 
         let scoresHTML = "";
 
-        player.scores.forEach((item, scoreIndex) => {
+        if (player.scores.length === 0) {
+    scoresHTML = `
+        <div class="no-score">
+            🎵 还没有添加歌曲
+        </div>
+    `;
+}
+
+player.scores.forEach((item, scoreIndex) => {
 
             scoresHTML += `
                 <div class="score">
-                    第 ${scoreIndex + 1} 首：
-                    ${item.song_name || "未命名歌曲"}
-                    — ${Number(item.score).toFixed(2)}
+        第 ${scoreIndex + 1} 首：
+        <strong>${item.song_name || "未命名歌曲"}</strong>
+— <strong class="score-number">${Number(item.score).toFixed(2)}</strong>
 
 <button
     class="edit-btn"
@@ -524,7 +598,7 @@ input:focus {
 
                 <div style="width:100%">
 
-                    <strong>${player.name}</strong>
+                    <strong class="player-name">${player.name}</strong>
 
                     ${scoresHTML}
 
@@ -534,14 +608,18 @@ input:focus {
                         type="text"
                         id="song-${index}"
                         placeholder="输入歌曲名称"
+                        onkeydown="if(event.key === 'Enter') addScore(${index})"
                     >
 
                     <input
-                        type="number"
-                        id="score-${index}"
-                        placeholder="输入分数，例如 95.50"
-                        step="0.01"
-                    >
+    type="number"
+    id="score-${index}"
+    placeholder="输入分数，例如 95.50"
+    step="0.01"
+    min="0"
+    max="100"
+    onkeydown="if(event.key === 'Enter') addScore(${index})"
+>
 
                     <button class="add-score-btn" onclick="addScore(${index})">
     ＋ 添加分数
@@ -557,8 +635,16 @@ input:focus {
 
 
     function showRanking(type) {
-
     const rankingContainer = document.getElementById("ranking");
+
+    document.getElementById("totalTab").classList.remove("active");
+    document.getElementById("averageTab").classList.remove("active");
+
+    if (type === "total") {
+        document.getElementById("totalTab").classList.add("active");
+    } else {
+        document.getElementById("averageTab").classList.add("active");
+    }
 
     let ranking = players.map(player => {
 
@@ -614,11 +700,13 @@ input:focus {
         ${number} ${player.name}
     </strong>
     <br>
-    ${type === "total" ? "总分" : "平均分"}：${value}
-    <br>
+    ${type === "total" ? "总分" : "平均分"}：
+<strong class="ranking-value">${value}</strong>
+    <div class="ranking-details">
     🎵 歌曲数：${player.songCount}
     <br>
     ⭐ 最高分：${player.highest.toFixed(2)}
+</div>
 </div>
         `;
 
