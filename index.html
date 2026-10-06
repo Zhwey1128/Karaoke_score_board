@@ -106,14 +106,26 @@ input:focus {
         }
 
         .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    background: #f1f1f1;
+    padding: 5px;
+    border-radius: 12px;
+}
 
-        .tabs button {
-            flex: 1;
-        }
+.tabs button {
+    flex: 1;
+    background: transparent;
+    color: #666;
+    box-shadow: none;
+}
+
+.tabs button:hover {
+    background: white;
+    color: #667eea;
+    transform: none;
+}
     </style>
 </head>
 
