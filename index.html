@@ -181,7 +181,33 @@
 
     const data = await response.json();
 
-    console.log(data);
+    players = [];
+
+    data.forEach(row => {
+
+        let player = players.find(
+            p => p.name === row.player_name
+        );
+
+        if (!player) {
+
+            player = {
+                name: row.player_name,
+                scores: []
+            };
+
+            players.push(player);
+        }
+
+        player.scores.push({
+            song_name: row.song_name,
+            score: Number(row.score)
+        });
+
+    });
+
+    displayPlayers();
+    showRanking("total");
 }
 
     function addScore(index) {
