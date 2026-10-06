@@ -212,9 +212,16 @@
 
     async function addScore(index) {
 
+    const songInput = document.getElementById("song-" + index);
     const scoreInput = document.getElementById("score-" + index);
 
+    const songName = songInput.value.trim();
     const score = parseFloat(scoreInput.value);
+
+    if (songName === "") {
+        alert("请输入歌曲名称");
+        return;
+    }
 
     if (isNaN(score)) {
         alert("请输入正确的分数");
@@ -235,7 +242,7 @@
 
             body: JSON.stringify({
                 player_name: players[index].name,
-                song_name: "未命名歌曲",
+                song_name: songName,
                 score: score
             })
         }
@@ -252,6 +259,7 @@
         return;
     }
 
+    songInput.value = "";
     scoreInput.value = "";
 
     await loadPlayers();
