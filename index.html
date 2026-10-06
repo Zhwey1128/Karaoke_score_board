@@ -238,6 +238,40 @@ input:focus {
     border-radius: 8px;
 }
 
+.delete-player-btn {
+    padding: 6px 9px;
+    font-size: 14px;
+    border-radius: 7px;
+    background: #e74c3c;
+}
+
+.delete-player-btn:hover {
+    background: #c0392b;
+}
+
+.player-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.score-high {
+    color: #27ae60;
+    font-weight: 700;
+}
+
+.score-medium {
+    color: #f39c12;
+    font-weight: 700;
+}
+
+.score-low {
+    color: #e74c3c;
+    font-weight: 700;
+}
+
 @media (max-width: 600px) {
     body {
         padding: 10px;
@@ -569,11 +603,18 @@ if (exists) {
 
 player.scores.forEach((item, scoreIndex) => {
 
-            scoresHTML += `
-                <div class="score">
+            const scoreValue = Number(item.score);
+
+const scoreClass =
+    scoreValue >= 90 ? "score-high" :
+    scoreValue >= 80 ? "score-medium" :
+    "score-low";
+
+scoresHTML += `
+    <div class="score">
         第 ${scoreIndex + 1} 首：
         <strong>${item.song_name || "未命名歌曲"}</strong>
-— <strong class="score-number">${Number(item.score).toFixed(2)}</strong>
+        — <strong class="${scoreClass}">${scoreValue.toFixed(2)}</strong>
 
 <button
     class="edit-btn"
@@ -598,13 +639,17 @@ player.scores.forEach((item, scoreIndex) => {
 
                 <div style="width:100%">
 
-                    <strong class="player-name">${player.name}</strong>
-                    <button
+                    <div class="player-header">
+    <strong class="player-name">${player.name}</strong>
+
+    <button
     class="delete-player-btn"
     onclick="deletePlayer(${index})"
+    title="删除参加者"
 >
-    删除参加者
+    🗑️
 </button>
+</div>
 
                     ${scoresHTML}
 
