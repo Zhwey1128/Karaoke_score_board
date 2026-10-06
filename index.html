@@ -283,6 +283,13 @@
                     第 ${scoreIndex + 1} 首：
                     ${item.song_name || "未命名歌曲"}
                     — ${Number(item.score).toFixed(2)}
+
+                    <button
+                        onclick="deleteScore(${item.id})"
+                        style="margin-left:8px;"
+                    >
+                        🗑️
+                    </button>
                 </div>
             `;
 
