@@ -560,11 +560,14 @@ input:focus {
             : 0;
 
         return {
-            name: player.name,
-            total: total,
-            average: average,
-            songCount: player.scores.length
-        };
+    name: player.name,
+    total: total,
+    average: average,
+    songCount: player.scores.length,
+    highest: player.scores.length > 0
+        ? Math.max(...player.scores.map(item => Number(item.score)))
+        : 0
+};
 
     });
 
@@ -602,6 +605,8 @@ input:focus {
     ${type === "total" ? "总分" : "平均分"}：${value}
     <br>
     🎵 歌曲数：${player.songCount}
+    <br>
+    ⭐ 最高分：${player.highest.toFixed(2)}
 </div>
         `;
 
