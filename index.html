@@ -279,6 +279,13 @@ input:focus {
     margin-bottom: 12px;
 }
 
+.last-updated {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    margin-bottom: 15px;
+}
+
 @media (max-width: 600px) {
     body {
         padding: 10px;
@@ -333,6 +340,7 @@ input:focus {
 </div>
 
 <div class="participant-count" id="participantCount"></div>
+        <div class="last-updated" id="lastUpdated"></div>
 
 <div id="ranking"></div>
     </div>
@@ -697,8 +705,22 @@ scoresHTML += `
     function showRanking(type) {
     const rankingContainer = document.getElementById("ranking");
 
-    document.getElementById("participantCount").textContent =
-        `👥 参赛人数：${players.length} 人`;
+    const totalSongs = players.reduce(
+    (sum, player) => sum + player.scores.length,
+    0
+);
+
+document.getElementById("participantCount").innerHTML =
+    `👥 参赛人数：${players.length} 人
+    　🎵 总歌曲数：${totalSongs} 首`;
+
+    document.getElementById("lastUpdated").textContent =
+    "🕒 最后更新：" +
+    new Date().toLocaleTimeString("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    });
 
     document.getElementById("totalTab").classList.remove("active");
     document.getElementById("averageTab").classList.remove("active");
