@@ -594,12 +594,14 @@ input:focus {
 
         rankingContainer.innerHTML += `
             <div class="ranking">
-                <strong>
-                    ${number} ${player.name}
-                </strong>
-                <br>
-                ${type === "total" ? "总分" : "平均分"}：${value}
-            </div>
+    <strong>
+        ${number} ${player.name}
+    </strong>
+    <br>
+    ${type === "total" ? "总分" : "平均分"}：${value}
+    <br>
+    🎵 歌曲数：${player.scores.length}
+</div>
         `;
 
     });
