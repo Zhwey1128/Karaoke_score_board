@@ -313,82 +313,64 @@
 
     function showRanking(type) {
 
-        const rankingContainer =
-            document.getElementById("ranking");
+    const rankingContainer = document.getElementById("ranking");
 
-        let ranking = players.map(player => {
+    let ranking = players.map(player => {
 
-            const total =
-                player.scores.reduce(
-                    (sum, score) => sum + score,
-                    0
-                );
+        const total = player.scores.reduce(
+            (sum, item) => sum + Number(item.score),
+            0
+        );
 
-            const average =
-                player.scores.length > 0
-                ? total / player.scores.length
-                : 0;
+        const average = player.scores.length > 0
+            ? total / player.scores.length
+            : 0;
 
-            return {
-                name: player.name,
-                total: total,
-                average: average
-            };
+        return {
+            name: player.name,
+            total: total,
+            average: average
+        };
 
-        });
+    });
 
+    if (type === "total") {
 
-        if (type === "total") {
+        ranking.sort((a, b) => b.total - a.total);
 
-            ranking.sort(
-                (a, b) => b.total - a.total
-            );
+    } else {
 
-        } else {
+        ranking.sort((a, b) => b.average - a.average);
 
-            ranking.sort(
-                (a, b) => b.average - a.average
-            );
+    }
 
-        }
+    rankingContainer.innerHTML = "";
 
+    ranking.forEach((player, index) => {
 
-        rankingContainer.innerHTML = "";
+        const number =
+            index === 0 ? "🥇" :
+            index === 1 ? "🥈" :
+            index === 2 ? "🥉" :
+            `${index + 1}.`;
 
-        ranking.forEach((player, index) => {
-
-            const number =
-                index === 0 ? "🥇" :
-                index === 1 ? "🥈" :
-                index === 2 ? "🥉" :
-                `${index + 1}.`;
-
-            const value =
-                type === "total"
+        const value =
+            type === "total"
                 ? player.total.toFixed(2)
                 : player.average.toFixed(2);
 
+        rankingContainer.innerHTML += `
+            <div class="ranking">
+                <strong>
+                    ${number} ${player.name}
+                </strong>
+                <br>
+                ${type === "total" ? "总分" : "平均分"}：${value}
+            </div>
+        `;
 
-            rankingContainer.innerHTML += `
-
-                <div class="ranking">
-
-                    <strong>
-                        ${number} ${player.name}
-                    </strong>
-
-                    <br>
-
-                    ${type === "total" ? "总分" : "平均分"}：
-                    ${value}
-
-                </div>
-
-            `;
-
-        });
-
-    }
+    });
+}
 
     loadPlayers();
 
