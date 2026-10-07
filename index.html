@@ -1594,6 +1594,20 @@ function openCompetition(id) {
             return;
         }
 
+        const competitionData =
+    await competitionResponse.json();
+
+if (competitionData.length > 0) {
+
+    currentCompetitionName =
+        competitionData[0].name;
+
+    document.getElementById(
+        "competitionName"
+    ).textContent =
+        currentCompetitionName;
+}
+
 
         /*
          * 2. 读取所有参加者
