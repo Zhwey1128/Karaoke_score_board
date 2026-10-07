@@ -787,6 +787,122 @@ button:hover {
 }
 
 /* =========================
+   Host Login
+========================= */
+
+.host-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+#loginStatus {
+    font-size: 13px;
+    color: #888;
+}
+
+.host-login-btn {
+    background: #4f46e5;
+    padding: 8px 13px;
+    font-size: 13px;
+}
+
+.host-logout-btn {
+    background: #777;
+    padding: 8px 13px;
+    font-size: 13px;
+}
+
+.login-modal {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    align-items: center;
+    justify-content: center;
+
+    z-index: 9999;
+
+    padding: 20px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 380px;
+
+    background: white;
+    border-radius: 22px;
+
+    padding: 28px;
+
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.login-title {
+    text-align: center;
+    font-size: 23px;
+    font-weight: 800;
+    color: #4f46e5;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    margin: 7px 0 20px;
+}
+
+.login-submit-btn {
+    width: 100%;
+    margin-top: 5px;
+}
+
+.login-cancel-btn {
+    width: 100%;
+    margin-top: 8px;
+    background: #eee;
+    color: #666;
+}
+
+.login-cancel-btn:hover {
+    background: #ddd;
+}
+
+.login-error {
+    text-align: center;
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 12px;
+}
+
+.host-only {
+    display: none;
+}
+
+@media (max-width: 600px) {
+
+    .host-controls {
+        margin-bottom: 12px;
+    }
+
+    .host-login-btn,
+    .host-logout-btn {
+        padding: 7px 11px;
+    }
+
+    .login-box {
+        padding: 22px;
+    }
+}
+
+/* =========================
    Mobile
 ========================= */
 
@@ -927,6 +1043,30 @@ button:hover {
 
     <div id="competitionPage">
     <div class="competition-header">
+        <div class="host-controls">
+
+    <span id="loginStatus">
+        👀 观众模式
+    </span>
+
+    <button
+        id="loginBtn"
+        class="host-login-btn"
+        onclick="showLogin()"
+    >
+        🔐 主办人登录
+    </button>
+
+    <button
+        id="logoutBtn"
+        class="host-logout-btn"
+        onclick="logoutHost()"
+        style="display:none;"
+    >
+        登出
+    </button>
+
+</div>
     <div class="competition-title">
     🎤 <span id="competitionName">加载中...</span>
 </div>
@@ -1002,6 +1142,173 @@ button:hover {
     new URLSearchParams(window.location.search).get("competition");
 
 let currentCompetitionName = "";
+
+    let authToken =
+    localStorage.getItem("karaoke_auth_token");
+
+let currentUserId =
+    localStorage.getItem("karaoke_user_id");
+
+let isHost = !!authToken && !!currentUserId;
+
+
+function showLogin() {
+    document.getElementById("loginModal").style.display = "flex";
+    document.getElementById("loginError").textContent = "";
+}
+
+
+function closeLogin() {
+    document.getElementById("loginModal").style.display = "none";
+}
+
+
+async function loginHost() {
+
+    const email =
+        document.getElementById("loginEmail").value.trim();
+
+    const password =
+        document.getElementById("loginPassword").value;
+
+    const errorBox =
+        document.getElementById("loginError");
+
+    errorBox.textContent = "";
+
+    if (email === "" || password === "") {
+        errorBox.textContent =
+            "请输入 Email 和密码";
+        return;
+    }
+
+    const response = await fetch(
+        SUPABASE_URL +
+        "/auth/v1/token?grant_type=password",
+        {
+            method: "POST",
+
+            headers: {
+                "apikey": SUPABASE_KEY,
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.log(data);
+
+        errorBox.textContent =
+            "Email 或密码错误";
+
+        return;
+    }
+
+    authToken = data.access_token;
+    currentUserId = data.user.id;
+
+    localStorage.setItem(
+        "karaoke_auth_token",
+        authToken
+    );
+
+    localStorage.setItem(
+        "karaoke_user_id",
+        currentUserId
+    );
+
+    isHost = true;
+
+    closeLogin();
+
+    updateHostUI();
+
+    await loadPlayers();
+}
+
+
+function logoutHost() {
+
+    authToken = null;
+    currentUserId = null;
+    isHost = false;
+
+    localStorage.removeItem(
+        "karaoke_auth_token"
+    );
+
+    localStorage.removeItem(
+        "karaoke_user_id"
+    );
+
+    updateHostUI();
+
+    loadPlayers();
+}
+
+
+function updateHostUI() {
+
+    const loginStatus =
+        document.getElementById("loginStatus");
+
+    const loginBtn =
+        document.getElementById("loginBtn");
+
+    const logoutBtn =
+        document.getElementById("logoutBtn");
+
+    if (isHost) {
+
+        loginStatus.textContent =
+            "🔐 主办人模式";
+
+        loginStatus.style.color =
+            "#16a34a";
+
+        loginBtn.style.display =
+            "none";
+
+        logoutBtn.style.display =
+            "inline-block";
+
+    } else {
+
+        loginStatus.textContent =
+            "👀 观众模式";
+
+        loginStatus.style.color =
+            "#888";
+
+        loginBtn.style.display =
+            "inline-block";
+
+        logoutBtn.style.display =
+            "none";
+    }
+
+    updateManagementUI();
+}
+
+
+function updateManagementUI() {
+
+    document
+        .querySelectorAll(".host-only")
+        .forEach(element => {
+
+            element.style.display =
+                isHost ? "" : "none";
+
+        });
+}
 
     function showCompetitionPage() {
     document.getElementById("competitionListPage").style.display = "none";
@@ -1238,11 +1545,11 @@ if (exists) {
             method: "POST",
 
             headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY,
-                "Content-Type": "application/json",
-                "Prefer": "return=minimal"
-            },
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + authToken,
+    "Content-Type": "application/json",
+    "Prefer": "return=minimal"
+},
 
             body: JSON.stringify({
     competition_id: currentCompetitionId,
@@ -1286,9 +1593,9 @@ if (exists) {
             method: "DELETE",
 
             headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY
-            }
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + authToken
+}
         }
     );
 
@@ -1348,7 +1655,7 @@ if (exists) {
 
             headers: {
                 "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY,
+                "Authorization": "Bearer " + authToken,
                 "Content-Type": "application/json",
                 "Prefer": "return=minimal"
             },
@@ -1438,16 +1745,16 @@ if (exists) {
                         <div class="score-actions">
 
                             <button
-                                class="edit-btn"
-                                onclick="editScore(${item.id})"
+    class="edit-btn host-only"
+    onclick="editScore(${item.id})"
                                 title="修改歌曲和分数"
                             >
                                 ✏️
                             </button>
 
                             <button
-                                class="delete-btn"
-                                onclick="deleteScore(${item.id})"
+    class="delete-btn host-only"
+    onclick="deleteScore(${item.id})"
                                 title="删除这首歌曲"
                             >
                                 🗑️
@@ -1511,7 +1818,7 @@ if (exists) {
                     </div>
 
                     <button
-                        class="delete-player-btn"
+    class="delete-player-btn host-only"
                         onclick="deletePlayer(${index})"
                         title="删除参加者"
                     >
@@ -1557,7 +1864,9 @@ if (exists) {
 
                 </div>
 
-                <div class="add-score-area">
+                <div
+    class="add-score-area host-only"
+>
 
                     <input
                         type="text"
@@ -1767,13 +2076,14 @@ const value = rankingScore.toFixed(2);
         {
             method: "POST",
             headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY,
-                "Content-Type": "application/json",
-                "Prefer": "return=representation"
-            },
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + authToken,
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
+},
             body: JSON.stringify({
-                name: competitionName
+                name: competitionName,
+    owner_id: currentUserId
             })
         }
     );
@@ -1834,9 +2144,9 @@ encodeURIComponent(player.name),
         {
             method: "DELETE",
             headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY
-            }
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + authToken
+}
         }
     );
 
@@ -1850,7 +2160,9 @@ encodeURIComponent(player.name),
     await loadPlayers();
 }
 
-   if (currentCompetitionId) {
+   updateHostUI();
+
+if (currentCompetitionId) {
     showCompetitionPage();
     loadPlayers();
 } else {
@@ -1858,6 +2170,50 @@ encodeURIComponent(player.name),
 }
 
 </script>
+<div id="loginModal" class="login-modal">
+
+    <div class="login-box">
+
+        <div class="login-title">
+            🔐 主办人登录
+        </div>
+
+        <div class="login-subtitle">
+            登录后可以管理比赛
+        </div>
+
+        <input
+            type="email"
+            id="loginEmail"
+            placeholder="输入主办人 Email"
+        >
+
+        <input
+            type="password"
+            id="loginPassword"
+            placeholder="输入密码"
+            onkeydown="if(event.key === 'Enter') loginHost()"
+        >
+
+        <button
+            class="login-submit-btn"
+            onclick="loginHost()"
+        >
+            登录
+        </button>
+
+        <button
+            class="login-cancel-btn"
+            onclick="closeLogin()"
+        >
+            取消
+        </button>
+
+        <div id="loginError" class="login-error"></div>
+
+    </div>
+
+</div>
 
 </body>
 </html>
