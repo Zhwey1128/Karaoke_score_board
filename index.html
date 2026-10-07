@@ -2416,15 +2416,32 @@ async function shareCompetition() {
 
     const player = players[index];
 
+    if (!player) {
+        alert("找不到这个参加者");
+        return;
+    }
+
     const confirmDelete = confirm(
-        `确定要删除参加者「${player.name}」以及他的所有歌曲吗？`
+        "确定要删除参加者「" +
+        player.name +
+        "」吗？\n\n" +
+        "这个参加者的所有歌曲和分数也会一起删除。"
     );
 
     if (!confirmDelete) {
         return;
     }
 
-    const response = await fetch(
+    console.log(
+        "Deleting participant:",
+        player.name
+    );
+
+    /*
+     * 1. 删除这个参加者的所有歌曲
+     */
+
+    const scoresResponse = await fetch(
         SUPABASE_URL +
         "/rest/v1/scores?competition_id=eq." +
         currentCompetitionId +
@@ -2432,37 +2449,97 @@ async function shareCompetition() {
         encodeURIComponent(player.name),
         {
             method: "DELETE",
-
             headers: {
                 "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + authToken,
-                "Content-Type": "application/json",
-                "Prefer": "return=representation"
+                "Authorization":
+                    "Bearer " + authToken,
+                "Content-Type":
+                    "application/json"
             }
         }
     );
 
-    const result = await response.text();
+    const scoresResult =
+        await scoresResponse.text();
 
     console.log(
-        "DELETE PLAYER:",
-        response.status,
-        result
+        "DELETE PLAYER SCORES:",
+        scoresResponse.status,
+        scoresResult
     );
 
-    if (!response.ok) {
+    if (!scoresResponse.ok) {
 
         alert(
-            "删除参加者失败\n\n" +
-            "HTTP: " + response.status +
+            "删除歌曲记录失败\n\n" +
+            "HTTP: " +
+            scoresResponse.status +
             "\n\n" +
-            result
+            scoresResult
         );
 
         return;
     }
 
+
+    /*
+     * 2. 删除 participants 里面的参加者
+     */
+
+    if (player.id !== null) {
+
+        const participantResponse =
+            await fetch(
+                SUPABASE_URL +
+                "/rest/v1/participants?id=eq." +
+                player.id,
+                {
+                    method: "DELETE",
+                    headers: {
+                        "apikey": SUPABASE_KEY,
+                        "Authorization":
+                            "Bearer " + authToken,
+                        "Content-Type":
+                            "application/json"
+                    }
+                }
+            );
+
+        const participantResult =
+            await participantResponse.text();
+
+        console.log(
+            "DELETE PARTICIPANT:",
+            participantResponse.status,
+            participantResult
+        );
+
+        if (!participantResponse.ok) {
+
+            alert(
+                "删除参加者失败\n\n" +
+                "HTTP: " +
+                participantResponse.status +
+                "\n\n" +
+                participantResult
+            );
+
+            return;
+        }
+    }
+
+
+    /*
+     * 3. 重新读取资料
+     */
+
     await loadPlayers();
+
+    alert(
+        "参加者「" +
+        player.name +
+        "」已经删除"
+    );
 }
 
    (async function init() {
