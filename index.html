@@ -1474,15 +1474,17 @@ function openCompetition(id) {
         id;
 }
 
-    function addPlayer() {
+    async function addPlayer() {
 
-    if (!isHost || !authToken) {
-        alert("请先登录主办人账号");
+    if (!(await checkHostAuth())) {
         return;
     }
 
-    const input = document.getElementById("playerName");
-    const name = input.value.trim();
+    const input =
+        document.getElementById("playerName");
+
+    const name =
+        input.value.trim();
 
     if (name === "") {
         alert("请输入参加者名字");
@@ -1491,7 +1493,8 @@ function openCompetition(id) {
 
     const exists = players.some(
         player =>
-            player.name.toLowerCase() === name.toLowerCase()
+            player.name.toLowerCase() ===
+            name.toLowerCase()
     );
 
     if (exists) {
@@ -1499,94 +1502,246 @@ function openCompetition(id) {
         return;
     }
 
-    players.push({
-        name: name,
-        scores: []
-    });
+    console.log("Adding participant:", name);
+    console.log("Competition:", currentCompetitionId);
+    console.log("User:", currentUserId);
+
+    const response = await fetch(
+        SUPABASE_URL +
+        "/rest/v1/participants",
+        {
+            method: "POST",
+            headers: {
+                "apikey": SUPABASE_KEY,
+                "Authorization":
+                    "Bearer " + authToken,
+                "Content-Type":
+                    "application/json",
+                "Prefer":
+                    "return=representation"
+            },
+            body: JSON.stringify({
+                competition_id:
+                    currentCompetitionId,
+                name: name
+            })
+        }
+    );
+
+    const result =
+        await response.text();
+
+    console.log(
+        "ADD PARTICIPANT:",
+        response.status,
+        result
+    );
+
+    if (!response.ok) {
+
+        alert(
+            "添加参加者失败\n\n" +
+            "HTTP: " +
+            response.status +
+            "\n\n" +
+            result
+        );
+
+        return;
+    }
 
     input.value = "";
 
-    displayPlayers();
+    await loadPlayers();
+
     showRanking("total");
 }
 
     async function loadPlayers() {
-    if (!currentCompetitionId) {
-        currentCompetitionId =
-            "2577b84c-7206-44a0-b298-73d5b16093bf";
 
-        const newUrl =
-            window.location.pathname +
-            "?competition=" +
-            currentCompetitionId;
+    try {
 
-        window.history.replaceState({}, "", newUrl);
-    }
-
-    // 读取比赛名称
-    const competitionResponse = await fetch(
-        SUPABASE_URL +
-        "/rest/v1/competitions?id=eq." +
-        currentCompetitionId +
-        "&select=*",
-        {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY
-            }
-        }
-    );
-
-    const competitions = await competitionResponse.json();
-
-    if (competitions.length > 0) {
-        currentCompetitionName = competitions[0].name;
-
-        document.getElementById("competitionName").textContent =
-            currentCompetitionName;
-    }
-
-    // 只读取当前比赛的分数
-    const response = await fetch(
-        SUPABASE_URL +
-        "/rest/v1/scores?competition_id=eq." +
-        currentCompetitionId +
-        "&select=*",
-        {
-            headers: {
-                "apikey": SUPABASE_KEY,
-                "Authorization": "Bearer " + SUPABASE_KEY
-            }
-        }
-    );
-
-    const data = await response.json();
-
-    players = [];
-
-    data.forEach(row => {
-        let player = players.find(
-            p => p.name === row.player_name
+        console.log(
+            "Loading competition:",
+            currentCompetitionId
         );
 
-        if (!player) {
-            player = {
-                name: row.player_name,
-                scores: []
-            };
+        /*
+         * 1. 读取比赛资料
+         */
 
-            players.push(player);
+        const competitionResponse =
+            await fetch(
+                SUPABASE_URL +
+                "/rest/v1/competitions?id=eq." +
+                currentCompetitionId +
+                "&select=*",
+                {
+                    headers: {
+                        "apikey": SUPABASE_KEY
+                    }
+                }
+            );
+
+        if (!competitionResponse.ok) {
+
+            console.log(
+                "Competition load failed:",
+                await competitionResponse.text()
+            );
+
+            alert("读取比赛资料失败");
+            return;
         }
 
-        player.scores.push({
-            id: row.id,
-            song_name: row.song_name,
-            score: Number(row.score)
-        });
-    });
 
-    displayPlayers();
-    showRanking("total");
+        /*
+         * 2. 读取所有参加者
+         */
+
+        const participantsResponse =
+            await fetch(
+                SUPABASE_URL +
+                "/rest/v1/participants?competition_id=eq." +
+                currentCompetitionId +
+                "&select=*"
+                ,
+                {
+                    headers: {
+                        "apikey": SUPABASE_KEY
+                    }
+                }
+            );
+
+        if (!participantsResponse.ok) {
+
+            console.log(
+                "Participants load failed:",
+                await participantsResponse.text()
+            );
+
+            alert("读取参加者失败");
+            return;
+        }
+
+        const participants =
+            await participantsResponse.json();
+
+
+        /*
+         * 3. 读取所有歌曲 / 分数
+         */
+
+        const scoresResponse =
+            await fetch(
+                SUPABASE_URL +
+                "/rest/v1/scores?competition_id=eq." +
+                currentCompetitionId +
+                "&select=*",
+                {
+                    headers: {
+                        "apikey": SUPABASE_KEY
+                    }
+                }
+            );
+
+        if (!scoresResponse.ok) {
+
+            console.log(
+                "Scores load failed:",
+                await scoresResponse.text()
+            );
+
+            alert("读取分数失败");
+            return;
+        }
+
+        const scores =
+            await scoresResponse.json();
+
+
+        /*
+         * 4. 建立参加者名单
+         */
+
+        players = participants.map(
+            participant => {
+
+                const playerScores =
+                    scores.filter(
+                        score =>
+                            score.player_name ===
+                            participant.name
+                    );
+
+                return {
+                    id: participant.id,
+                    name: participant.name,
+                    scores: playerScores
+                };
+
+            }
+        );
+
+
+        /*
+         * 5. 如果数据库里面有旧的分数，
+         *    但参加者资料还没有建立，
+         *    自动补回参加者
+         */
+
+        scores.forEach(score => {
+
+            const exists =
+                players.some(
+                    player =>
+                        player.name ===
+                        score.player_name
+                );
+
+            if (!exists) {
+
+                players.push({
+                    id: null,
+                    name: score.player_name,
+                    scores: scores.filter(
+                        item =>
+                            item.player_name ===
+                            score.player_name
+                    )
+                });
+
+            }
+
+        });
+
+
+        /*
+         * 6. 显示参加者
+         */
+
+        displayPlayers();
+
+        showRanking("total");
+
+
+        console.log(
+            "Participants loaded:",
+            players
+        );
+
+    } catch (error) {
+
+        console.error(
+            "LOAD PLAYERS ERROR:",
+            error
+        );
+
+        alert(
+            "读取资料时发生错误\n\n" +
+            error.message
+        );
+    }
 }
 
     async function addScore(index) {
