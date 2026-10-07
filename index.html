@@ -2354,6 +2354,10 @@ const value = rankingScore.toFixed(2);
 }
 
     async function createNewCompetition() {
+    if (!(await checkHostAuth())) {
+        return;
+    }
+
     const name = prompt(
         "请输入新比赛名称："
     );
