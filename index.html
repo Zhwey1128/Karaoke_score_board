@@ -1097,16 +1097,23 @@ button:hover {
     <div class="section">
         <h2>👤 参加者</h2>
 
-        <input 
-            type="text" 
-            id="playerName" 
-            placeholder="输入参加者名字"
-            onkeydown="if(event.key === 'Enter') addPlayer()"
-        >
+        <div class="host-only">
 
-        <button class="add-player-btn" onclick="addPlayer()">
-    ＋ 添加参加者
-</button>
+    <input 
+        type="text" 
+        id="playerName" 
+        placeholder="输入参加者名字"
+        onkeydown="if(event.key === 'Enter') addPlayer()"
+    >
+
+    <button
+        class="add-player-btn"
+        onclick="addPlayer()"
+    >
+        ＋ 添加参加者
+    </button>
+
+</div>
 
         <div id="players"></div>
     </div>
@@ -1410,6 +1417,11 @@ function openCompetition(id) {
 
     function addPlayer() {
 
+    if (!isHost || !authToken) {
+        alert("请先登录主办人账号");
+        return;
+    }
+
     const input = document.getElementById("playerName");
     const name = input.value.trim();
 
@@ -1419,13 +1431,14 @@ function openCompetition(id) {
     }
 
     const exists = players.some(
-    player => player.name.toLowerCase() === name.toLowerCase()
-);
+        player =>
+            player.name.toLowerCase() === name.toLowerCase()
+    );
 
-if (exists) {
-    alert("这个参加者已经存在");
-    return;
-}
+    if (exists) {
+        alert("这个参加者已经存在");
+        return;
+    }
 
     players.push({
         name: name,
@@ -1519,6 +1532,11 @@ if (exists) {
 
     async function addScore(index) {
 
+    if (!isHost || !authToken) {
+    alert("请先登录主办人账号");
+    return;
+}
+
     const songInput = document.getElementById("song-" + index);
     const scoreInput = document.getElementById("score-" + index);
 
@@ -1548,7 +1566,7 @@ if (exists) {
     "apikey": SUPABASE_KEY,
     "Authorization": "Bearer " + authToken,
     "Content-Type": "application/json",
-    "Prefer": "return=minimal"
+    "Prefer": "return=representation"
 },
 
             body: JSON.stringify({
@@ -1578,6 +1596,11 @@ if (exists) {
 }
 
     async function deleteScore(id) {
+
+    if (!isHost || !authToken) {
+    alert("请先登录主办人账号");
+    return;
+}
 
     const confirmDelete = confirm(
         "确定要删除这首歌的分数吗？"
@@ -1614,6 +1637,10 @@ if (exists) {
 }
 
     async function editScore(id) {
+    if (!isHost || !authToken) {
+    alert("请先登录主办人账号");
+    return;
+}
 
     const songName = prompt(
         "请输入新的歌曲名称："
@@ -2125,6 +2152,12 @@ async function shareCompetition() {
 }
 
     async function deletePlayer(index) {
+
+    if (!isHost || !authToken) {
+        alert("请先登录主办人账号");
+        return;
+    }
+
     const player = players[index];
 
     const confirmDelete = confirm(
@@ -2136,24 +2169,29 @@ async function shareCompetition() {
     }
 
     const response = await fetch(
-        SSUPABASE_URL +
-"/rest/v1/scores?competition_id=eq." +
-currentCompetitionId +
-"&player_name=eq." +
-encodeURIComponent(player.name),
+        SUPABASE_URL +
+        "/rest/v1/scores?competition_id=eq." +
+        currentCompetitionId +
+        "&player_name=eq." +
+        encodeURIComponent(player.name),
         {
             method: "DELETE",
+
             headers: {
-    "apikey": SUPABASE_KEY,
-    "Authorization": "Bearer " + authToken
-}
+                "apikey": SUPABASE_KEY,
+                "Authorization": "Bearer " + authToken
+            }
         }
     );
 
     if (!response.ok) {
+
         const error = await response.text();
+
         console.log(error);
+
         alert("删除参加者失败");
+
         return;
     }
 
