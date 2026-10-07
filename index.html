@@ -883,7 +883,7 @@ button:hover {
 }
 
 .host-only {
-    display: none;
+    display: block;
 }
 
 @media (max-width: 600px) {
@@ -1352,6 +1352,12 @@ function updateHostUI() {
     }
 
     updateManagementUI();
+
+    console.log("HOST STATUS:", isHost);
+    console.log(
+        "HOST ELEMENTS:",
+        document.querySelectorAll(".host-only").length
+    );
 }
 
 
@@ -1361,8 +1367,11 @@ function updateManagementUI() {
         .querySelectorAll(".host-only")
         .forEach(element => {
 
-            element.style.display =
-                isHost ? "" : "none";
+            if (isHost) {
+                element.style.display = "";
+            } else {
+                element.style.display = "none";
+            }
 
         });
 }
