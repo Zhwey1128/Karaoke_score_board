@@ -421,6 +421,45 @@ button:hover {
 }
 
 /* =========================
+   Competition Header
+========================= */
+
+.competition-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.competition-title {
+    font-size: 34px;
+    font-weight: 800;
+    color: #4f46e5;
+    letter-spacing: -0.5px;
+}
+
+.competition-subtitle {
+    margin-top: 6px;
+    font-size: 15px;
+    color: #999;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.competition-header .subtitle {
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+    .competition-title {
+        font-size: 25px;
+    }
+
+    .competition-subtitle {
+        font-size: 13px;
+    }
+}
+
+/* =========================
    Mobile
 ========================= */
 
@@ -487,8 +526,19 @@ button:hover {
 
 <div class="container">
 
-    <h1>🎤 Karaoke Score Board</h1>
-    <div class="subtitle">唱K大赛评分系统</div>
+    <div class="competition-header">
+    <div class="competition-title">
+        🎤 2026 10月唱K大赛
+    </div>
+
+    <div class="competition-subtitle">
+        Karaoke Score Board
+    </div>
+
+    <div class="subtitle">
+        🏆 唱K大赛评分系统
+    </div>
+</div>
 
     <div class="section">
         <h2>👤 参加者</h2>
