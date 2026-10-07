@@ -1778,15 +1778,54 @@ if (competitionData.length > 0) {
 }
 
 async function deleteCurrentCompetition() {
-    if (!(await checkHostAuth())) {
+
+    console.log("=== DELETE COMPETITION START ===");
+    console.log("Competition ID:", currentCompetitionId);
+    console.log("Competition Name:", currentCompetitionName);
+    console.log("Auth Token:", authToken ? "存在" : "不存在");
+    console.log("User ID:", currentUserId);
+
+    /*
+     * 1. 检查登录
+     */
+    if (!authToken || !currentUserId) {
+        alert(
+            "目前没有主办人登录。\n\n" +
+            "请先点击「主办人登录」。"
+        );
         return;
     }
 
+    /*
+     * 2. 验证登录状态
+     */
+    const authenticated =
+        await checkHostAuth();
+
+    console.log(
+        "Authenticated:",
+        authenticated
+    );
+
+    if (!authenticated) {
+        alert(
+            "主办人登录状态已经失效。\n\n" +
+            "请重新登录后再删除比赛。"
+        );
+        return;
+    }
+
+    /*
+     * 3. 检查比赛 ID
+     */
     if (!currentCompetitionId) {
-        alert("找不到目前的比赛");
+        alert("找不到目前的比赛 ID");
         return;
     }
 
+    /*
+     * 4. 第一次确认
+     */
     const firstConfirm = confirm(
         "确定要删除比赛「" +
         currentCompetitionName +
@@ -1798,9 +1837,16 @@ async function deleteCurrentCompetition() {
         return;
     }
 
+    /*
+     * 5. 第二次确认
+     */
     const secondConfirm = confirm(
         "最后确认！\n\n" +
-        "这个比赛的所有参加者、歌曲和分数都会被删除。\n\n" +
+        "这个比赛的：\n" +
+        "• 参加者\n" +
+        "• 歌曲\n" +
+        "• 分数\n\n" +
+        "都会被删除。\n\n" +
         "确定继续吗？"
     );
 
@@ -1808,23 +1854,32 @@ async function deleteCurrentCompetition() {
         return;
     }
 
-    console.log(
-        "Deleting competition:",
-        currentCompetitionId
-    );
-
+    /*
+     * 6. 删除比赛
+     */
     try {
+
+        console.log(
+            "Sending DELETE request..."
+        );
+
         const response = await fetch(
             SUPABASE_URL +
             "/rest/v1/competitions?id=eq." +
-            encodeURIComponent(currentCompetitionId),
+            encodeURIComponent(
+                currentCompetitionId
+            ),
             {
                 method: "DELETE",
+
                 headers: {
                     "apikey": SUPABASE_KEY,
                     "Authorization":
                         "Bearer " + authToken,
-                    "Prefer": "return=minimal"
+                    "Content-Type":
+                        "application/json",
+                    "Prefer":
+                        "return=representation"
                 }
             }
         );
@@ -1833,39 +1888,70 @@ async function deleteCurrentCompetition() {
             await response.text();
 
         console.log(
-            "DELETE COMPETITION:",
-            response.status,
+            "DELETE STATUS:",
+            response.status
+        );
+
+        console.log(
+            "DELETE RESULT:",
             result
         );
 
+        /*
+         * 7. 删除失败
+         */
         if (!response.ok) {
+
             alert(
-                "删除比赛失败\n\n" +
-                "HTTP: " +
+                "❌ 删除比赛失败\n\n" +
+                "HTTP 状态：" +
                 response.status +
                 "\n\n" +
                 result
             );
+
             return;
         }
 
+        /*
+         * 8. 检查到底有没有删除到资料
+         */
+        if (result === "[]" || result === "") {
+
+            alert(
+                "⚠️ 删除请求执行了，" +
+                "但没有删除任何比赛。\n\n" +
+                "这通常代表 Supabase RLS 没有允许你删除这场比赛。"
+            );
+
+            return;
+        }
+
+        console.log(
+            "Competition deleted successfully."
+        );
+
         alert(
-            "比赛「" +
+            "✅ 比赛「" +
             currentCompetitionName +
             "」已经删除。"
         );
 
+        /*
+         * 9. 回到比赛列表
+         */
         window.location.href =
             window.location.pathname;
 
     } catch (error) {
+
         console.error(
             "DELETE COMPETITION ERROR:",
             error
         );
 
         alert(
-            "删除比赛时发生错误\n\n" +
+            "❌ 删除比赛时发生 JavaScript 错误\n\n" +
             error.message
         );
     }
