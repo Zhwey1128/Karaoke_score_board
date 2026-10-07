@@ -2016,6 +2016,7 @@ function openCompetition(id) {
             </div>
         `;
     });
+            updateManagementUI();
 }
 
 
@@ -2300,14 +2301,22 @@ async function shareCompetition() {
     await loadPlayers();
 }
 
-   updateHostUI();
+   (async function init() {
 
-if (currentCompetitionId) {
-    showCompetitionPage();
-    loadPlayers();
-} else {
-    loadCompetitionList();
-}
+    if (authToken && currentUserId) {
+        await checkHostAuth();
+    }
+
+    updateHostUI();
+
+    if (currentCompetitionId) {
+        showCompetitionPage();
+        await loadPlayers();
+    } else {
+        loadCompetitionList();
+    }
+
+})();
 
 </script>
 <div id="loginModal" class="login-modal">
