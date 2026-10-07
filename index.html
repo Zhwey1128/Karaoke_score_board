@@ -1156,7 +1156,7 @@ let currentCompetitionName = "";
 let currentUserId =
     localStorage.getItem("karaoke_user_id");
 
-let isHost = !!authToken && !!currentUserId;
+let isHost = false;
 
 async function checkHostAuth() {
 
